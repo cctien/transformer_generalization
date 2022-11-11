@@ -80,6 +80,7 @@ class Task:
         self.helper.saver["scaler"] = self.scaler
 
         print(f"Total number of model parameters: {sum(p.numel() for p in self.model.parameters())}")
+        print(f"Optimizing on device(s) {self.helper.device}")
 
         self.helper.saver["model"] = self.model
         self.helper.restore()
@@ -136,7 +137,7 @@ class Task:
             loss_sum = 0
 
             test = set.start_test()
-            for d in tqdm(loader):
+            for d in tqdm(loader, "validation"):
                 d = self.prepare_data(d)
                 res = self.model_interface(d)
                 digits = self.model_interface.decode_outputs(res)
@@ -304,7 +305,8 @@ class Task:
 
         self.data_iter = iter(self.train_loader)
 
-        while (self.helper.args.stop_after or 10e10) > self.helper.state.iter:
+        # while (self.helper.args.stop_after or 10e10) > self.helper.state.iter:
+        for _ in tqdm(range(self.helper.args.stop_after or 10e10), "training"):
             self.load_time_meter.stop()
 
             res, plots = self.train_step()
